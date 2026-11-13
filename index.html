@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Aromas para a casa</title>
+<meta name="description" content="Catálogo de aromas para a casa: essências, difusores, home sprays, águas perfumadas e cuidados com o corpo.">
+<meta property="og:title" content="Aromas para a casa">
+<meta property="og:description" content="Escolha pelo aroma e monte sua sacola.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Jost:wght@400;500&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%23C8D6B4'/%3E%3Cpath d='M16 7c4 5 4 12 0 18-4-6-4-13 0-18z' fill='%232F3A28'/%3E%3C/svg%3E">
+</head>
+<body>
+  <div class="frame">
+    <header class="top">
+      <nav class="top-l">
+        <a href="#cheiros">Cheiros</a>
+        <a href="#aromaterapia">Aromaterapia</a>
+        <a href="#aparelhos">Aromatizadores</a>
+      </nav>
+      <a href="#" class="brand">
+        <span class="brand-main">Aromas</span>
+        <span class="brand-sub">para a casa</span>
+      </a>
+      <div class="top-r">
+        <button type="button" class="bag-btn" id="bagBtn" aria-label="Abrir sacola">
+          Sacola <span class="bag-count" id="bagCount">0</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="app" tabindex="-1"></main>
+
+    <footer class="foot">
+      <p>Produtos originais Via Aroma. Valores e entrega combinados depois do pedido.</p>
+    </footer>
+  </div>
+
+  <!-- Sacola -->
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="drawer" id="drawer" aria-label="Sacola" aria-hidden="true">
+    <div class="drawer-head">
+      <h2>Sua sacola</h2>
+      <button type="button" class="x" id="closeBag" aria-label="Fechar sacola">Fechar</button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="js/config.js"></script>
+  <script src="js/familias.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
