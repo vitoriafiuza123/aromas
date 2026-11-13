@@ -148,11 +148,9 @@ function heroPanel({c1, c2, titulo, badge, texto, capaId, ps, sideL, sideR, cta}
 
 function home(){
   document.title = C.NOME_SITE;
-  app.innerHTML = banner("Aromas para a casa", "inicio", "#C8D6B4", "#2F3A28") + `
-  <p class="fam-texto">Escolha um cheiro, veja todos os produtos dele e monte sua sacola. Sem pagamento agora: depois do pedido eu te chamo no WhatsApp para combinar valores e entrega.</p>
-
+  app.innerHTML = `
   <section class="sec" id="cheiros">
-    <div class="sec-head"><h2>Escolha pelo cheiro</h2></div>
+    <div class="sec-head"><h2>Escolha pelo cheiro</h2><p>Toque num cheiro para ver todos os produtos dele.</p></div>
     <div class="fam-row">${FAM.map(f => { const n = aromasFam(f.id).length;
       return `<a class="fam-c" href="#familia-${f.id}" style="--c1:${f.c1};--c2:${f.c2}">
         <span class="fam-dot" data-bg="${f.id}"></span>
