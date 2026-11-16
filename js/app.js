@@ -139,9 +139,9 @@ function buyCtl(id){
     ? `<div class="qty" role="group" aria-label="Quantidade de ${nome}"><button type="button" data-dec="${id}" aria-label="Tirar um ${nome}">−</button><span aria-live="polite">${q}</span><button type="button" data-inc="${id}" aria-label="Pôr mais um ${nome}">+</button></div><button type="button" class="btn" data-open-bag>Ver sacola</button>`
     : `<button type="button" class="btn" data-add="${id}" aria-label="Adicionar ${nome} à sacola">Adicionar</button>`;
 }
-function prodCard(p){
+function prodCard(p, comAroma){
   const a = p.aroma ? AR[p.aroma] : null;
-  const titulo = a ? T[p.tipo].nome : (p.nome || T[p.tipo].nome);
+  const titulo = a ? (comAroma === true ? `${T[p.tipo].nome} ${aromaLabel(a)}` : T[p.tipo].nome) : comAroma === true && p.tipo === "aparelho" ? nomeProd(p) : (p.nome || T[p.tipo].nome);
   const linha1 = a ? (p.tam || a.linha) : [T[p.tipo].nome, p.tam].filter(Boolean).join(" · ");
   const linha2 = a ? T[p.tipo].uso : p.kit ? itensKit(p) : p.linha;
   return `<article class="prod ${bag[p.id]?"in":""}" data-id="${p.id}" data-aroma="${p.aroma||""}" data-tipo="${p.tipo}">
@@ -459,28 +459,47 @@ function especialPage(id){
 }
 
 function natalPage(){
-  const n = NATAL, kits = PRODUTOS.filter(p => p.kit);
+  const n = NATAL, cores = `--c1:${n.c1};--c2:${n.c2}`, pr = n.presentes || {};
   const aromas = n.aromas.map(id => AR[id]).filter(a => a && PRODUTOS.some(p => p.aroma === a.id));
+  const presentes = PRODUTOS.filter(p => p.kit
+    || (pr.outros || []).includes(p.id)
+    || ((pr.aromas || []).includes(p.aroma) && (pr.tipos || []).includes(p.tipo) && (p.tipo !== "spray" || /200/.test(p.tam || ""))))
+    .filter(p => preco(p))
+    .sort((x, y) => (y.kit ? 1 : 0) - (x.kit ? 1 : 0) || ORDEM_TIPO.indexOf(x.tipo) - ORDEM_TIPO.indexOf(y.tipo) || preco(x) - preco(y) || nomeProd(x).localeCompare(nomeProd(y)));
+  const faixas = (n.faixas || []).map(([de, ate, nome]) => ({ nome, ps: presentes.filter(p => preco(p) > de && preco(p) <= ate) })).filter(f => f.ps.length);
   document.title = `Natal · ${C.NOME_SITE}`;
   app.innerHTML = banner("Natal", "natal", n.c1, n.c2) + `
   <p class="fam-texto">${esc(n.texto)}</p>
-  ${kits.length ? `<section class="ar-prods natal-kits" style="--c1:${n.c1};--c2:${n.c2}">
-    <div class="ar-head"><h2>${kits.length > 1 ? "Kits de presente" : "Kit de presente"}</h2><div class="ar-sub">Mais barato que comprar separado</div></div>
-    <div class="prods">${kits.map(prodCard).join("")}</div></section>` : ""}
+  ${faixas.length ? `<div class="ar-head natal-epoca"><h2>Presentes por preço</h2><div class="ar-sub">Kits com desconto e presentes prontos</div></div>
+  <section class="ar-row" id="faixas" aria-label="Faixas de preço" style="${cores}">
+    ${faixas.map((f, i) => `<button type="button" class="ar-c" data-faixa="${i}" aria-pressed="${i === 0}"><span class="ar-nome">${esc(f.nome)}</span></button>`).join("")}
+  </section>
+  <section class="ar-prods" id="presentes" style="${cores}"></section>` : ""}
   <div class="ar-head natal-epoca"><h2>Cheiros da época</h2></div>
-  <section class="ar-row" aria-label="Cheiros da época" style="--c1:${n.c1};--c2:${n.c2}">
+  <section class="ar-row" id="epoca" aria-label="Cheiros da época" style="${cores}">
     ${aromas.map((a, i) => bolinha(a, { c1: n.c1, c2: n.c2 }, i === 0)).join("")}
   </section>
-  <section class="ar-prods" id="produtos" style="--c1:${n.c1};--c2:${n.c2}"></section>`;
+  <section class="ar-prods" id="produtos" style="${cores}"></section>`;
+  const verFaixa = i => {
+    const f = faixas[i];
+    $("#faixas").querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.faixa === String(i)));
+    $("#presentes").innerHTML = `<div class="ar-head"><h2>${esc(f.nome)}</h2><div class="ar-sub">${f.ps.length} ${f.ps.length > 1 ? "presentes" : "presente"}</div></div>
+      <div class="prods">${f.ps.map(p => prodCard(p, true)).join("")}</div>`;
+    hydratePhotos($("#presentes"));
+  };
   const mostrar = id => {
     const a = AR[id], pa = PRODUTOS.filter(p => p.aroma === id).sort(sortProd);
-    app.querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.ar === id));
+    $("#epoca").querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.ar === id));
     $("#produtos").innerHTML = `<div class="ar-head"><h2>${esc(a.nome)}</h2>
       <div class="ar-sub">${esc([a.linha, a.cidade].filter(Boolean).join(" · "))} · ${pa.length} ${pa.length > 1 ? "produtos" : "produto"}</div></div>
       <div class="prods">${pa.map(prodCard).join("")}</div>`;
     hydratePhotos($("#produtos"));
   };
-  app.querySelectorAll(".ar-c").forEach(b => b.onclick = () => { mostrar(b.dataset.ar); $("#produtos").scrollIntoView({block:"start"}); });
+  if (faixas.length){
+    $("#faixas").querySelectorAll(".ar-c").forEach(b => b.onclick = () => { verFaixa(+b.dataset.faixa); $("#presentes").scrollIntoView({block:"start"}); });
+    verFaixa(0);
+  }
+  $("#epoca").querySelectorAll(".ar-c").forEach(b => b.onclick = () => { mostrar(b.dataset.ar); $("#produtos").scrollIntoView({block:"start"}); });
   if (aromas.length) mostrar(aromas[0].id);
   carregarBanner();
 }

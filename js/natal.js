@@ -9,6 +9,18 @@ window.NATAL = {
   fim: "2026-12-25",
   c1: "#EADBD3", c2: "#7A2E2A",
   texto: "Canela, maçã, baunilha e especiarias. Os cheiros que deixam a casa com cara de Natal, e kits prontos para presentear.",
+  // Presentes por preço: os kits de Natal + estes produtos, separados pelas faixas abaixo
+  faixas: [[0, 30, "Até R$ 30"], [30, 60, "R$ 30 a 60"], [60, 100, "R$ 60 a 100"], [100, 99999, "Acima de R$ 100"]],
+  presentes: {
+    aromas: ["classica-bamboo", "classica-lavanda-francesa", "classica-flor-de-cerejeira", "classica-black-vanilla",
+             "classica-vanilla", "classica-breeze", "classica-maca-com-canela", "caszulo-canela-e-maca"],
+    tipos: ["difusor", "agua", "hidratante", "spray"],   // home spray só o de 200 ml
+    outros: ["aromat-via-aroma-standard", "aromat-via-aroma-standard-black", "aromat-via-aroma-original", "aromat-via-aroma-matte-black",
+             "aromat-via-aroma-stone-black", "aromat-via-aroma-stone-white", "aromat-via-aroma-usb", "aromat-via-aroma-colors-candy-rosa",
+             "aromat-via-aroma-colors-terracota-laranja", "aromat-via-aroma-standard-c-bamboo", "aromat-via-aroma-standard-c-vanilla",
+             "aromat-via-aroma-original-c-lavanda", "aromat-kit-presente-original-bamboo-lavanda", "aromat-kit-presente-original-flor-de-cerejeira-vanilla",
+             "aromat-kit-presente-standard-bamboo-lavanda", "aromat-kit-presente-standard-flor-de-cerejeira-vanilla"]
+  },
   aromas: [
     "classica-maca-com-canela", "caszulo-canela-e-maca", "classica-canela-da-india",
     "classica-black-vanilla", "vanilla-lovers-vanilla-spice", "mundo-punta-cana-ameixa-e-vanilla", "caszulo-ameixa-negra"
