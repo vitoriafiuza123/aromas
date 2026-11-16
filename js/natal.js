@@ -1,7 +1,7 @@
 /* NATAL
    Tudo o que aparece no Natal fica aqui. Depois de "fim" a página e os avisos somem sozinhos.
    - ate: último dia para pedir e receber antes do Natal (aviso no topo some depois desse dia)
-   - aromas: os "cheiros da época" (ids da lista AROMAS em js/data.js)
+   - aromas: os "cheiros da época" (ids da lista AROMAS em js/data.js). Kits com esses cheiros aparecem primeiro em cada faixa
    - kits: cada kit soma o preço dos itens e tira o desconto (0.05 = 5%), arredondado para ,90
      Foto do kit: img/<id-do-kit>.jpg */
 window.NATAL = {
@@ -13,7 +13,8 @@ window.NATAL = {
   faixas: [[0, 30, "Até R$ 30"], [30, 60, "R$ 30 a 60"], [60, 100, "R$ 60 a 100"], [100, 99999, "Acima de R$ 100"]],
   aromas: [
     "classica-maca-com-canela", "caszulo-canela-e-maca", "classica-canela-da-india",
-    "classica-black-vanilla", "vanilla-lovers-vanilla-spice", "mundo-punta-cana-ameixa-e-vanilla", "caszulo-ameixa-negra"
+    "classica-black-vanilla", "vanilla-lovers-vanilla-spice", "mundo-punta-cana-ameixa-e-vanilla", "caszulo-ameixa-negra",
+    "vanilla-lovers-vanilla-e-nuts", "vanilla-lovers-vanilla-e-honey"
   ],
   kits: [
     { id: "kit-lembrancinha-vanilla", nome: "Lembrancinha Vanilla", desconto: 0.05,
@@ -99,6 +100,27 @@ window.NATAL = {
       itens: ["dif-de-varetas-200ml-via-aroma-vanilla-spice", "agua-perf-via-aroma-500ml-vanilla-spice", "home-spray-200ml-via-aroma-vanilla-spice", "sache-perfumado-10g-vanilla-spice"] },
     { id: "kit-grande-natal", nome: "Grande Natal", desconto: 0.05,
       texto: "Para presentear a casa toda: difusores de Maçã com Canela e Black Vanilla, home spray Vanilla Spice e sachê.",
-      itens: ["dif-de-varetas-200ml-classica-maca-com-canela", "dif-de-varetas-200ml-classica-black-vanilla", "home-spray-200ml-via-aroma-vanilla-spice", "sache-via-aroma-10g-classica-maca-c-canela"] }
+      itens: ["dif-de-varetas-200ml-classica-maca-com-canela", "dif-de-varetas-200ml-classica-black-vanilla", "home-spray-200ml-via-aroma-vanilla-spice", "sache-via-aroma-10g-classica-maca-c-canela"] },
+    { id: "kit-noite-feliz", nome: "Noite Feliz", desconto: 0.05,
+      texto: "Black Vanilla com aromatizador Stone Black: difusor, home spray e essência para a noite de Natal.",
+      itens: ["dif-de-varetas-200ml-classica-black-vanilla", "home-spray-200ml-via-aroma-classica-black-vanilla", "aromat-via-aroma-stone-black", "essencia-via-aroma-10ml-classica-black-vanilla"] },
+    { id: "kit-maca-com-canela-completo", nome: "Maçã com Canela Completo", desconto: 0.05,
+      texto: "O cheiro do Natal para durar: difusor com refil, home spray, sachê e essência.",
+      itens: ["dif-de-varetas-200ml-classica-maca-com-canela", "refil-250ml-dif-de-varetas-classica-maca-c-canela", "home-spray-200ml-via-aroma-classica-maca-c-canela", "sache-via-aroma-25g-classica-maca-c-canela", "essencia-via-aroma-10ml-classica-maca-c-canela"] },
+    { id: "kit-ceia-completa", nome: "Ceia Completa", desconto: 0.05,
+      texto: "Ameixa e Vanilla da Linha Mundo: difusor, água perfumada, home spray, sachê e essência.",
+      itens: ["dif-de-varetas-200ml-mundo-punta-cana-ameixa-e-vanilla", "agua-perf-via-aroma-365ml-mundo-punta-cana-ameixa-e-vanilla", "home-spray-150ml-via-aroma-mundo-punta-cana-ameixa-e-vanilla", "sache-via-aroma-20g-mundo-punta-cana-ameixa-e-vanilla", "essencia-via-aroma-10ml-mundo-punta-cana-ameixa-e-vanilla"] },
+    { id: "kit-doces-de-natal", nome: "Doces de Natal", desconto: 0.05,
+      texto: "Dois difusores Vanilla Lovers, Vanilla Spice e Vanilla e Nuts, com sachês combinando.",
+      itens: ["dif-de-varetas-200ml-via-aroma-vanilla-spice", "dif-de-varetas-200ml-via-aroma-vanilla-e-nuts", "sache-perfumado-10g-vanilla-spice", "sache-perfumado-10g-vanilla-e-nuts"] },
+    { id: "kit-natal-no-aromatizador", nome: "Natal no Aromatizador", desconto: 0.05,
+      texto: "Aromatizador Stone Black e sete essências da época para trocar todo dia.",
+      itens: ["aromat-via-aroma-stone-black", "essencia-via-aroma-10ml-classica-maca-c-canela", "essencia-via-aroma-10ml-classica-canela-da-india", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-spice", "essencia-via-aroma-10ml-classica-black-vanilla", "essencia-via-aroma-10ml-mundo-punta-cana-ameixa-e-vanilla", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-e-nuts", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-e-honey"] },
+    { id: "kit-caszulo-de-natal", nome: "Caszulo de Natal", desconto: 0.05,
+      texto: "Canela e Maçã e Ameixa Negra da linha Caszulo: difusor, home spray e água perfumada de cada.",
+      itens: ["dif-de-varetas-caszulo-250ml-canela-e-maca", "home-spray-caszulo-200ml-canela-e-maca", "agua-perf-caszulo-500ml-canela-e-maca", "dif-de-varetas-caszulo-250ml-ameixa-negra", "home-spray-caszulo-200ml-ameixa-negra", "agua-perf-caszulo-500ml-ameixa-negra"] },
+    { id: "kit-natal-em-familia", nome: "Natal em Família", desconto: 0.05,
+      texto: "Para perfumar a casa toda: difusores de Maçã com Canela e Vanilla Spice, água perfumada, home spray Black Vanilla e sachê.",
+      itens: ["dif-de-varetas-200ml-classica-maca-com-canela", "dif-de-varetas-200ml-via-aroma-vanilla-spice", "agua-perf-via-aroma-500ml-vanilla-spice", "home-spray-200ml-via-aroma-classica-black-vanilla", "sache-via-aroma-25g-classica-maca-c-canela"] }
   ]
 };

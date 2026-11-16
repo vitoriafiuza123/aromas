@@ -461,9 +461,10 @@ function especialPage(id){
 function natalPage(){
   const n = NATAL, cores = `--c1:${n.c1};--c2:${n.c2}`, pr = n.presentes || {};
   const aromas = n.aromas.map(id => AR[id]).filter(a => a && PRODUTOS.some(p => p.aroma === a.id));
+  const epoca = p => p.kit.itens.some(id => n.aromas.includes(BY_ID[id].aroma)) ? 1 : 0;
   const presentes = PRODUTOS.filter(p => p.kit)
     .filter(p => preco(p))
-    .sort((x, y) => (y.kit ? 1 : 0) - (x.kit ? 1 : 0) || ORDEM_TIPO.indexOf(x.tipo) - ORDEM_TIPO.indexOf(y.tipo) || preco(x) - preco(y) || nomeProd(x).localeCompare(nomeProd(y)));
+    .sort((x, y) => epoca(y) - epoca(x) || preco(x) - preco(y) || nomeProd(x).localeCompare(nomeProd(y)));
   const faixas = (n.faixas || []).map(([de, ate, nome]) => ({ nome, ps: presentes.filter(p => preco(p) > de && preco(p) <= ate) })).filter(f => f.ps.length);
   document.title = `Natal · ${C.NOME_SITE}`;
   app.innerHTML = banner("Natal", "natal", n.c1, n.c2) + `
@@ -503,6 +504,7 @@ function route(){
   hydratePhotos();
 }
 window.addEventListener("hashchange", route);
+if (NATAL) document.querySelector(".top-l").insertAdjacentHTML("afterbegin", `<a href="#natal" class="nav-natal">Natal</a>`);
 if (NATAL && hojeISO <= NATAL.ate){
   const dia = NATAL.ate.split("-").reverse().slice(0,2).join("/");
   document.querySelector(".frame").insertAdjacentHTML("afterbegin", `<a class="aviso-natal" href="#natal">Pedidos para receber antes do Natal até <strong>${dia}</strong>. <span>Ver presentes</span></a>`);
