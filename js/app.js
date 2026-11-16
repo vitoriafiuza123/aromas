@@ -266,7 +266,7 @@ function home(){
   <a class="natal-faixa" href="#natal" style="--c1:${NATAL.c1};--c2:${NATAL.c2}">
     <span class="nf-img" data-bg="natal"></span>
     <span class="nf-txt"><span class="nf-tag">Natal</span><span class="nf-tit">Presentes de Natal</span>
-      <span class="nf-sub">Kit com desconto e os cheiros da época${hojeISO <= NATAL.ate ? `. Pedidos até ${dia}` : ""}.</span>
+      <span class="nf-sub">Kits de presente com desconto${hojeISO <= NATAL.ate ? `. Pedidos até ${dia}` : ""}.</span>
       <span class="nf-cta">Ver presentes</span></span>
   </a>` : ""}
   <section class="sec" id="cheiros">
@@ -473,11 +473,7 @@ function natalPage(){
     ${faixas.map((f, i) => `<button type="button" class="ar-c" data-faixa="${i}" aria-pressed="${i === 0}"><span class="ar-nome">${esc(f.nome)}</span></button>`).join("")}
   </section>
   <section class="ar-prods" id="presentes" style="${cores}"></section>` : ""}
-  <div class="ar-head natal-epoca"><h2>Cheiros da época</h2></div>
-  <section class="ar-row" id="epoca" aria-label="Cheiros da época" style="${cores}">
-    ${aromas.map((a, i) => bolinha(a, { c1: n.c1, c2: n.c2 }, i === 0)).join("")}
-  </section>
-  <section class="ar-prods" id="produtos" style="${cores}"></section>`;
+`;
   const verFaixa = i => {
     const f = faixas[i];
     $("#faixas").querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.faixa === String(i)));
@@ -485,20 +481,10 @@ function natalPage(){
       <div class="prods">${f.ps.map(p => prodCard(p, true)).join("")}</div>`;
     hydratePhotos($("#presentes"));
   };
-  const mostrar = id => {
-    const a = AR[id], pa = PRODUTOS.filter(p => p.aroma === id).sort(sortProd);
-    $("#epoca").querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.ar === id));
-    $("#produtos").innerHTML = `<div class="ar-head"><h2>${esc(a.nome)}</h2>
-      <div class="ar-sub">${esc([a.linha, a.cidade].filter(Boolean).join(" · "))} · ${pa.length} ${pa.length > 1 ? "produtos" : "produto"}</div></div>
-      <div class="prods">${pa.map(prodCard).join("")}</div>`;
-    hydratePhotos($("#produtos"));
-  };
   if (faixas.length){
     $("#faixas").querySelectorAll(".ar-c").forEach(b => b.onclick = () => { verFaixa(+b.dataset.faixa); $("#presentes").scrollIntoView({block:"start"}); });
     verFaixa(0);
   }
-  $("#epoca").querySelectorAll(".ar-c").forEach(b => b.onclick = () => { mostrar(b.dataset.ar); $("#produtos").scrollIntoView({block:"start"}); });
-  if (aromas.length) mostrar(aromas[0].id);
   carregarBanner();
 }
 
