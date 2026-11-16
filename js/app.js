@@ -461,16 +461,14 @@ function especialPage(id){
 function natalPage(){
   const n = NATAL, cores = `--c1:${n.c1};--c2:${n.c2}`, pr = n.presentes || {};
   const aromas = n.aromas.map(id => AR[id]).filter(a => a && PRODUTOS.some(p => p.aroma === a.id));
-  const presentes = PRODUTOS.filter(p => p.kit
-    || (pr.outros || []).includes(p.id)
-    || ((pr.aromas || []).includes(p.aroma) && (pr.tipos || []).includes(p.tipo) && (p.tipo !== "spray" || /200/.test(p.tam || ""))))
+  const presentes = PRODUTOS.filter(p => p.kit)
     .filter(p => preco(p))
     .sort((x, y) => (y.kit ? 1 : 0) - (x.kit ? 1 : 0) || ORDEM_TIPO.indexOf(x.tipo) - ORDEM_TIPO.indexOf(y.tipo) || preco(x) - preco(y) || nomeProd(x).localeCompare(nomeProd(y)));
   const faixas = (n.faixas || []).map(([de, ate, nome]) => ({ nome, ps: presentes.filter(p => preco(p) > de && preco(p) <= ate) })).filter(f => f.ps.length);
   document.title = `Natal · ${C.NOME_SITE}`;
   app.innerHTML = banner("Natal", "natal", n.c1, n.c2) + `
   <p class="fam-texto">${esc(n.texto)}</p>
-  ${faixas.length ? `<div class="ar-head natal-epoca"><h2>Presentes por preço</h2><div class="ar-sub">Kits com desconto e presentes prontos</div></div>
+  ${faixas.length ? `<div class="ar-head natal-epoca"><h2>Presentes por preço</h2><div class="ar-sub">Kits prontos, mais baratos que comprar separado</div></div>
   <section class="ar-row" id="faixas" aria-label="Faixas de preço" style="${cores}">
     ${faixas.map((f, i) => `<button type="button" class="ar-c" data-faixa="${i}" aria-pressed="${i === 0}"><span class="ar-nome">${esc(f.nome)}</span></button>`).join("")}
   </section>
@@ -483,7 +481,7 @@ function natalPage(){
   const verFaixa = i => {
     const f = faixas[i];
     $("#faixas").querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.faixa === String(i)));
-    $("#presentes").innerHTML = `<div class="ar-head"><h2>${esc(f.nome)}</h2><div class="ar-sub">${f.ps.length} ${f.ps.length > 1 ? "presentes" : "presente"}</div></div>
+    $("#presentes").innerHTML = `<div class="ar-head"><h2>${esc(f.nome)}</h2><div class="ar-sub">${f.ps.length} ${f.ps.length > 1 ? "kits" : "kit"}</div></div>
       <div class="prods">${f.ps.map(p => prodCard(p, true)).join("")}</div>`;
     hydratePhotos($("#presentes"));
   };
