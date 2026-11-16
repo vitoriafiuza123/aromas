@@ -293,7 +293,12 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .t-act{background:var(--paper);color:var(--forest);border:0;padding:8px 12px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;cursor:pointer;white-space:nowrap}
 .t-x{background:none;border:0;color:var(--paper);font-size:20px;line-height:1;cursor:pointer;padding:4px 6px;opacity:.8}
 .t-x:hover{opacity:1}
-.bag-resumo{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.bag-resumo{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin:0}
+.bag-topo{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 6px}
+.esvaziar{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:8px 0;font-size:12px;color:var(--muted);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.esvaziar svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.esvaziar:hover{color:#9b2c2c}
+.esvaziar:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .drawer-head h2:focus{outline:none}
 .link{background:none;border:0;padding:0;color:var(--forest);text-decoration:underline;cursor:pointer;font:inherit;font-weight:500}
 #e-envio:empty{display:none}
