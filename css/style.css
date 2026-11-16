@@ -175,8 +175,10 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .item .t{font-family:var(--display);font-size:15px;line-height:1.2}
 .item .s{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:3px}
 .item .rm{background:none;border:0;padding:0;margin-top:4px;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
-.form{display:flex;flex-direction:column;gap:14px}
-.form h3{font-size:20px;margin-top:4px}
+.form,.pedir{display:flex;flex-direction:column;gap:14px}
+.pedir{margin-top:6px}
+.pedir .note{margin:0}
+.form h3,.pedir h3{font-size:20px;margin-top:4px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field label{font-size:11px;letter-spacing:.16em;text-transform:uppercase}
 .field input,.field textarea{font:inherit;font-size:16px;padding:11px 12px;border:1px solid #D5CFC1;background:#fff;color:var(--ink);border-radius:0}
