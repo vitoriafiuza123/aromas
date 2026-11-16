@@ -535,8 +535,6 @@ function closeBag(){ $("#scrim").hidden = true; const d=$("#drawer"); d.classLis
 $("#bagBtn").onclick = openBag; $("#closeBag").onclick = closeBag; $("#scrim").onclick = closeBag;
 document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#drawer").classList.contains("open")) closeBag(); });
 
-let draft = {};
-try { draft = JSON.parse(localStorage.getItem("dados") || "{}") || {}; } catch(e){}
 const resumo = () => { const linhas = Object.entries(bag).map(([id,q]) => { const p = BY_ID[id], v = preco(p); return `${q}x ${nomeProd(p)} (${detalhe(p)}) ${v ? "= " + BRL(v * q) : "= a consultar"}`; });
   const { t, sem } = totalSacola(); return linhas.join("\n") + `\nTotal: ${BRL(t)}${sem ? " + itens a consultar" : ""}`; };
 
@@ -561,64 +559,20 @@ function renderBag(){
     </ul>
     ${(() => { const { t, sem } = totalSacola(); return `<div class="total"><span>Total</span><strong>${BRL(t)}</strong></div>
       ${sem ? `<p class="note">${sem === 1 ? "1 item está" : sem + " itens estão"} sem valor no site. Eu te passo o valor no WhatsApp.</p>` : ""}`; })()}
-    <form class="form" id="orderForm" novalidate>
-      <h3>Seus dados</h3>
-      ${C.PLANILHA_URL ? "" : `<div class="warn" id="warnCfg">Os pedidos ainda não podem ser enviados porque a planilha não foi ligada. Enquanto isso, copie a lista e mande pelo WhatsApp. <button type="button" class="link" id="copiarLista">Copiar lista</button></div>`}
-      <div class="field"><label for="f-nome">Nome</label><input id="f-nome" name="nome" autocomplete="name" required value="${esc(draft.nome||"")}"><span class="err" id="e-nome"></span></div>
-      <div class="field"><label for="f-zap">WhatsApp</label><input id="f-zap" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 90000-0000" required value="${esc(draft.whatsapp||"")}"><span class="err" id="e-zap"></span></div>
-      <div class="field"><label for="f-local">Bairro e cidade</label><input id="f-local" name="local" autocomplete="address-level2" value="${esc(draft.local||"")}"></div>
-      <div class="field"><label for="f-obs">Observação</label><textarea id="f-obs" name="obs" placeholder="É para presente? Alguma preferência?">${esc(draft.obs||"")}</textarea></div>
-      <p class="note">Você não paga nada agora. Assim que o pedido chegar, eu te chamo no WhatsApp para combinar o pagamento e a entrega.</p>
-      <button class="btn" type="submit" id="sendBtn" ${C.PLANILHA_URL ? "" : `aria-describedby="warnCfg"`}>Enviar pedido</button>
-      <p class="err" id="e-envio" role="alert"></p>
-    </form>`;
+    <div class="pedir">
+      <h3>Como pedir</h3>
+      <p class="note">Toque em copiar pedido e cole na conversa comigo no WhatsApp. A gente combina o pagamento e a entrega por lá.</p>
+      <button type="button" class="btn" id="copiarLista">Copiar pedido</button>
+    </div>`;
   hydratePhotos(body);
   $("#esvaziar").onclick = esvaziar;
-  const f = $("#orderForm");
-  f.addEventListener("input", () => { draft = Object.fromEntries(new FormData(f)); try{localStorage.setItem("dados", JSON.stringify(draft));}catch(e){} });
-  $("#f-nome").addEventListener("blur", vNome); $("#f-zap").addEventListener("blur", vZap);
-  $("#f-nome").addEventListener("input", () => $("#e-nome").textContent = "");
-  $("#f-zap").addEventListener("input", () => $("#e-zap").textContent = "");
-  f.addEventListener("submit", submit);
   const cp = $("#copiarLista");
-  if (cp) cp.onclick = async () => {
+  cp.onclick = async () => {
     const txt = `Oi! Quero fazer um pedido:\n${resumo()}`;
-    try { await navigator.clipboard.writeText(txt); toast("Lista copiada. Agora é só colar no WhatsApp."); }
+    try { await navigator.clipboard.writeText(txt); cp.textContent = "Pedido copiado"; setTimeout(() => cp.isConnected && (cp.textContent = "Copiar pedido"), 2500); toast("Pedido copiado. Agora é só colar no WhatsApp."); }
     catch(e){ toast("Não consegui copiar. Tire um print da sacola e me mande."); }
   };
 }
-function vNome(){ const ok = $("#f-nome").value.trim().length >= 2; $("#e-nome").textContent = ok ? "" : "Escreva seu nome para eu saber de quem é o pedido."; return ok; }
-function vZap(){ const d = $("#f-zap").value.replace(/\D/g,""); const ok = d.length >= 10 && d.length <= 13; $("#e-zap").textContent = ok ? "" : "Coloque o número com DDD, por exemplo (51) 99999-0000."; return ok; }
-
-async function submit(e){
-  e.preventDefault();
-  const a = vNome(), b = vZap();
-  if (!a) return $("#f-nome").focus(); if (!b) return $("#f-zap").focus();
-  if (!C.PLANILHA_URL){ $("#warnCfg").scrollIntoView({block:"center"}); $("#copiarLista").focus(); return; }
-  $("#e-envio").textContent = "";
-  const btn = $("#sendBtn"); btn.disabled = true; btn.textContent = "Enviando...";
-  const d = new Date(), pad = n => String(n).padStart(2,"0");
-  const pedido = `P${String(d.getFullYear()).slice(2)}${pad(d.getMonth()+1)}${pad(d.getDate())}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;
-  const payload = {
-    pedido, data: d.toISOString(),
-    nome: $("#f-nome").value.trim(), whatsapp: $("#f-zap").value.trim(),
-    local: $("#f-local").value.trim(), obs: $("#f-obs").value.trim(),
-    itens: Object.entries(bag).map(([id,q]) => { const p = BY_ID[id], ar = p.aroma ? AR[p.aroma] : null;
-      return p.kit ? {id, produto: `${p.nome} (${itensKit(p)})`, aroma: "", linha: "Natal", tamanho: p.tam, qtd: q} : {id, produto: T[p.tipo].nome + (ar ? "" : (p.nome ? " " + p.nome : "")), aroma: ar ? aromaLabel(ar) : "", linha: ar ? ar.linha : p.linha, tamanho: p.tam || "", qtd: q}; }),
-    totalItens: bagCount(), total: totalSacola().t, resumo: resumo()
-  };
-  try{
-    await fetch(C.PLANILHA_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(payload)});
-    enviado = { pedido, nome: payload.nome, zap: payload.whatsapp, itens: payload.totalItens };
-    bag = {}; save(); updateBadge(); sent = pedido; renderBag(); $("#drawer h2").focus();
-    document.querySelectorAll(".prod").forEach(el => refreshProd(el.dataset.id));
-  } catch(err){
-    btn.disabled = false; btn.textContent = "Enviar pedido";
-    $("#e-envio").textContent = "Não consegui enviar o pedido. Sua lista e seus dados continuam aqui. Confira a internet e tente de novo.";
-    toast("O pedido não foi enviado.", { label:"Tentar de novo", fn:() => $("#orderForm").requestSubmit() });
-  }
-}
-
 /* ---------- Cliques ---------- */
 document.addEventListener("click", e => {
   const t = e.target.closest("[data-add],[data-inc],[data-dec],[data-rm],[data-open-bag],[data-scroll]");
