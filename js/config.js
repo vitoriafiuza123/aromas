@@ -10,5 +10,5 @@ window.CONFIG = {
   PASTA_CAPAS: "img/capas/",    // capas das famílias: img/capas/<id>.png ou .jpg
   PASTA_ICONES: "aromas/",      // ícones das bolinhas: aromas/<id-do-aroma>.png
   EXTENSAO_FOTOS: ".jpg",
-  MULTIPLICADOR: 1.4           // preço no site = valor do painel x 1,4 (cobre o imposto e uma margem)
+  MARGEM: 1.15                 // preço no site = (painel + IPI do produto) x 1,15, arredondado para ,90
 };

@@ -60,7 +60,7 @@ const bagCount = () => Object.values(bag).reduce((a,b) => a+b, 0);
 const nomeProd = p => p.aroma ? `${T[p.tipo].nome} ${aromaLabel(AR[p.aroma])}` : (p.tipo === "oleo" ? `Óleo essencial ${p.nome}` : p.tipo === "aparelho" ? `Aromatizador ${p.nome}` : p.nome || T[p.tipo].nome);
 /* Preço: valor do painel x multiplicador, arredondado para cima até ,90 */
 const BRL = v => v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
-function preco(p){ const v = (window.PAINEL || {})[p.id]; if (!v) return null; return Math.ceil(v * (C.MULTIPLICADOR || 1.4) - 0.9) + 0.9; }
+function preco(p){ const v = (window.PAINEL || {})[p.id]; if (!v) return null; const ipi = (window.IPI || {})[p.tipo] ?? 0.22; return Math.ceil(v * (1 + ipi) * (C.MARGEM || 1.15) - 0.9) + 0.9; }
 function totalSacola(){ let t = 0, sem = 0; Object.entries(bag).forEach(([id,q]) => { const v = preco(BY_ID[id]); if (v) t += v * q; else sem += q; }); return { t, sem }; }
 const detalhe = p => [p.aroma ? AR[p.aroma].linha : p.linha, p.tam].filter(Boolean).join(" · ");
 function setQty(id, q){
@@ -300,12 +300,21 @@ function ligarFiltros(){
 function banner(nome, capaId, c1, c2){
   return `<section class="banner" style="--c1:${c1};--c2:${c2}">
     <div class="banner-img" data-bg="${capaId}"></div>
-    <h1 class="banner-title">${esc(nome)}</h1>
+    <h1 class="banner-title" style="--n:${Math.max(...nome.split(/\s+/).map(w => w.length))}">${esc(nome)}</h1>
     <div class="banner-img banner-front" data-recorte="${capaId}" aria-hidden="true"></div>
   </section>`;
 }
 // Capa: PNG sem fundo fica centralizado sobre o degradê da família; JPG ocupa a faixa toda.
+function ajustarTitulo(){
+  const h = document.querySelector(".banner-title"); if (!h) return;
+  h.style.fontSize = "";
+  let fs = parseFloat(getComputedStyle(h).fontSize);
+  for (let i = 0; i < 40 && h.scrollWidth > h.clientWidth + 1; i++) { fs *= 0.95; h.style.fontSize = fs + "px"; }
+}
+addEventListener("resize", ajustarTitulo);
+document.fonts && document.fonts.ready.then(ajustarTitulo);
 function carregarBanner(root=app){
+  ajustarTitulo();
   root.querySelectorAll("[data-bg]").forEach(el => {
     const base = C.PASTA_CAPAS + el.dataset.bg;
     const tryLoad = exts => { if (!exts.length) return; const img = new Image();
@@ -386,15 +395,28 @@ function famPage(f, aromaAtivo){
 
 function especialPage(id){
   const e = ESP[id], ps = PRODUTOS.filter(p => e.tipos.includes(p.tipo)).sort((a,b) => ORDEM_TIPO.indexOf(a.tipo) - ORDEM_TIPO.indexOf(b.tipo) || (a.nome||"").localeCompare(b.nome||""));
+  const tipos = [...new Set(ps.map(p => p.tipo))].sort((a,b) => ORDEM_TIPO.indexOf(a) - ORDEM_TIPO.indexOf(b));
+  const aba = (t, nome, on) => `<button type="button" class="ar-c" data-ft="${t}" aria-pressed="${on}"><span class="ar-nome">${esc(nome)}</span></button>`;
   document.title = `${e.nome} · ${C.NOME_SITE}`;
   app.innerHTML = banner(e.nome, id, e.c1, e.c2) + `
   <p class="fam-texto">${esc(e.texto)}</p>
-  <section class="sec" id="produtos">
-    <div class="sec-head"><h2>Todos os produtos</h2></div>
-    ${filtroBar(ps, null)}
+  <section class="ar-row" style="--c1:${e.c1};--c2:${e.c2}" aria-label="Tipos de produto">
+    ${aba("", "Todos", true)}${tipos.map(t => aba(t, T[t].nome, false)).join("")}
+  </section>
+  <section class="ar-prods" id="produtos">
+    <div class="ar-head"><h2 id="espTitulo">Todos</h2><div class="ar-sub" id="espConta"></div></div>
     <div class="prods">${ps.map(prodCard).join("")}</div>
   </section>`;
-  ligarFiltros(); carregarBanner();
+  const filtrar = t => {
+    let n = 0;
+    app.querySelectorAll(".prods .prod").forEach(el => { const ok = !t || el.dataset.tipo === t; el.hidden = !ok; if (ok) n++; });
+    app.querySelectorAll(".ar-row .ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.ft === t));
+    $("#espTitulo").textContent = t ? T[t].nome : "Todos";
+    $("#espConta").textContent = `${n} ${n === 1 ? "produto" : "produtos"}`;
+  };
+  app.querySelectorAll(".ar-row .ar-c").forEach(b => b.onclick = () => filtrar(b.dataset.ft));
+  filtrar("");
+  carregarBanner();
 }
 
 function route(){

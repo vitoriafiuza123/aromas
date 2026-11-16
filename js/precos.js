@@ -1,6 +1,6 @@
 /* PREÇOS
    Valor do painel de revendedora de cada produto (sem imposto), conferido em 16/11/2026.
-   O preço no site = painel x MULTIPLICADOR (em js/config.js), arredondado para ,90.
+   O preço no site = painel + IPI do tipo (tabela IPI abaixo), x MARGEM (em js/config.js), arredondado para ,90.
    Produto sem valor aqui aparece como "Valor sob consulta". */
 window.PAINEL = {
 "agua-perf-via-aroma-365ml-mundo-amsterda-tulipa-garden": 18.5,
@@ -484,4 +484,18 @@ window.PAINEL = {
 "sabonete-caszulo-250-ml-brisa-do-oceano": 7.65,
 "sabonete-caszulo-250-ml-campos-de-lavanda": 7.65,
 "sabonete-caszulo-250-ml-peonia": 7.65
+};
+
+/* IPI por tipo de produto, da tabela "Tabela Via Aroma com IPI" (16/11/2026) */
+window.IPI = {
+  agua: 0.22, "agua-at": 0.22, "refil-agua": 0.22,
+  difusor: 0.22, "refil-difusor": 0.22,
+  essencia: 0.22, hidro: 0.22,
+  spray: 0.22, "spray-at": 0.22, "refil-spray": 0.22,
+  sache: 0.22,
+  aparelho: 0.0975, kit: 0.0975,
+  oleo: 0.0325, blend: 0.0325, rollon: 0.0325,
+  limpador: 0.0325,
+  hidratante: 0.045,
+  sabonete: 0.065, "refil-sabonete": 0.065
 };
