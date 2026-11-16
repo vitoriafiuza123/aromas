@@ -58,6 +58,10 @@ Object.keys(bag).forEach(id => { if (!BY_ID[id]) delete bag[id]; });
 const save = () => { try { localStorage.setItem("sacola", JSON.stringify(bag)); } catch(e){} };
 const bagCount = () => Object.values(bag).reduce((a,b) => a+b, 0);
 const nomeProd = p => p.aroma ? `${T[p.tipo].nome} ${aromaLabel(AR[p.aroma])}` : (p.tipo === "oleo" ? `Óleo essencial ${p.nome}` : p.tipo === "aparelho" ? `Aromatizador ${p.nome}` : p.nome || T[p.tipo].nome);
+/* Preço: valor do painel x multiplicador, arredondado para cima até ,90 */
+const BRL = v => v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+function preco(p){ const v = (window.PAINEL || {})[p.id]; if (!v) return null; return Math.ceil(v * (C.MULTIPLICADOR || 1.4) - 0.9) + 0.9; }
+function totalSacola(){ let t = 0, sem = 0; Object.entries(bag).forEach(([id,q]) => { const v = preco(BY_ID[id]); if (v) t += v * q; else sem += q; }); return { t, sem }; }
 const detalhe = p => [p.aroma ? AR[p.aroma].linha : p.linha, p.tam].filter(Boolean).join(" · ");
 function setQty(id, q){
   if (q <= 0) delete bag[id]; else bag[id] = Math.min(q, 99);
@@ -109,92 +113,18 @@ function prodCard(p){
   const linha1 = a ? (p.tam || a.linha) : [T[p.tipo].nome, p.tam].filter(Boolean).join(" · ");
   const linha2 = a ? T[p.tipo].uso : p.linha;
   return `<article class="prod ${bag[p.id]?"in":""}" data-id="${p.id}" data-aroma="${p.aroma||""}" data-tipo="${p.tipo}">
-    <button type="button" class="pic" data-ver="${p.id}" aria-label="Ver detalhes de ${esc(nomeProd(p))}">${pic(p)}</button>
+    <div class="pic">${pic(p)}</div>
     <div class="body">
       <div class="line">${esc(linha1)}</div>
       <h3>${esc(titulo)}</h3>
       <div class="sub">${esc(linha2)}</div>
+      <div class="preco">${preco(p) ? BRL(preco(p)) : `<span class="consultar">Valor sob consulta</span>`}</div>
       <div class="buy">${buyCtl(p.id)}</div>
     </div></article>`;
 }
 function refreshProd(id){
   document.querySelectorAll(`.prod[data-id="${id}"]`).forEach(el => { el.classList.toggle("in", !!bag[id]); $(".buy", el).innerHTML = buyCtl(id); });
-  if (detAberto === id){ const b = $("#det .det-buy"); if (b) b.innerHTML = buyCtl(id); }
 }
-
-/* ---------- Detalhe do produto (janela de vidro) ---------- */
-let detAberto = null, detVolta = null;
-document.body.insertAdjacentHTML("beforeend",
-  `<div class="det-scrim" id="detScrim" hidden></div>
-   <div class="det" id="det" role="dialog" aria-modal="true" aria-labelledby="detTitulo" hidden><div class="det-card" id="detCard"></div></div>`);
-function detalheHTML(p){
-  const a = p.aroma ? AR[p.aroma] : null, f = a ? FAM_BY[a.fam] : null, t = T[p.tipo];
-  const titulo = a ? a.nome : (p.nome || t.nome);
-  const sobre = a ? [t.nome, a.cidade].filter(Boolean).join(" · ") : t.nome;
-  const specs = [["Produto", t.nome], ["Tamanho", p.tam], ["Linha", a ? a.linha : p.linha], ["Família", f && f.nome], ["Perfil", f && f.perfil], ["Como usar", t.uso]].filter(r => r[1]);
-  const irmaos = a ? PRODUTOS.filter(x => x.aroma === a.id).sort(sortProd) : [];
-  return `<button type="button" class="det-x" id="detX" aria-label="Fechar detalhes">×</button>
-    <div class="det-foto">${pic(p)}</div>
-    <div class="det-info">
-      <div class="det-sobre">${a ? `<span class="det-ic" data-dic="${a.id}"></span>` : ""}<span>${esc(sobre)}</span></div>
-      <h2 id="detTitulo">${esc(titulo)}</h2>
-      ${f && f.texto ? `<p class="det-texto">${esc(f.texto)}</p>` : ""}
-      <dl class="det-specs">${specs.map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
-      <div class="det-buy buy">${buyCtl(p.id)}</div>
-      ${irmaos.length > 1 ? `<div class="det-mais"><div class="det-rot">Também neste aroma</div><div class="det-chips">${irmaos.map(x =>
-        `<button type="button" class="det-chip" data-ver="${x.id}" ${x.id === p.id ? 'aria-current="true"' : ""}>${esc(T[x.tipo].nome)}${x.tam ? ` <small>${esc(x.tam)}</small>` : ""}</button>`).join("")}</div></div>` : ""}
-    </div>`;
-}
-function abrirDet(id){
-  const p = BY_ID[id]; if (!p) return;
-  const f = p.aroma ? FAM_BY[AR[p.aroma].fam] : null;
-  if (!detAberto) detVolta = document.activeElement;
-  detAberto = id;
-  const det = $("#det"), card = $("#detCard");
-  card.style.setProperty("--c1", f ? f.c1 : "#C8D6B4"); card.style.setProperty("--c2", f ? f.c2 : "#2F3A28");
-  card.innerHTML = detalheHTML(p);
-  card.scrollTop = 0;
-  hydratePhotos(card);
-  card.querySelectorAll("[data-dic]").forEach(el => {
-    const tryLoad = exts => { if (!exts.length) return; const img = new Image();
-      img.onload = () => { el.style.backgroundImage = `url("${img.src}")`; el.classList.add("on"); };
-      img.onerror = () => tryLoad(exts.slice(1)); img.src = `${C.PASTA_ICONES}${el.dataset.dic}${exts[0]}`; };
-    tryLoad([".png", ".jpg"]);
-  });
-  $("#detX").onclick = () => fecharDet();
-  if (det.hidden){
-    det.hidden = false; $("#detScrim").hidden = false;
-    document.documentElement.classList.add("travado");
-    requestAnimationFrame(() => { det.classList.add("open"); $("#detScrim").classList.add("open"); });
-  }
-  $("#detX").focus();
-}
-function fecharDet(semVoltar){
-  if (!detAberto) return;
-  detAberto = null;
-  const det = $("#det"); det.classList.remove("open"); $("#detScrim").classList.remove("open");
-  document.documentElement.classList.remove("travado");
-  setTimeout(() => { if (!detAberto){ det.hidden = true; $("#detScrim").hidden = true; } }, 260);
-  if (!semVoltar && detVolta && detVolta.isConnected) detVolta.focus();
-}
-$("#detScrim").onclick = () => fecharDet();
-document.addEventListener("keydown", e => {
-  if (!detAberto) return;
-  if (e.key === "Escape"){ e.stopPropagation(); fecharDet(); return; }
-  if (e.key === "Tab"){ // mantém o foco dentro da janela
-    const f = [...$("#detCard").querySelectorAll("button,[href],input")].filter(el => !el.disabled);
-    if (!f.length) return;
-    if (e.shiftKey && document.activeElement === f[0]){ e.preventDefault(); f[f.length-1].focus(); }
-    else if (!e.shiftKey && document.activeElement === f[f.length-1]){ e.preventDefault(); f[0].focus(); }
-  }
-}, true);
-// clicar no cartão (fora dos botões de compra) também abre os detalhes
-document.addEventListener("click", e => {
-  const v = e.target.closest("[data-ver]");
-  if (v){ abrirDet(v.dataset.ver); return; }
-  const card = e.target.closest(".prod");
-  if (card && !e.target.closest(".buy,button,a")) abrirDet(card.dataset.id);
-});
 function famCard(f){
   const ps = prodsFam(f.id), n = aromasFam(f.id).length;
   return `<a class="fam" href="#familia-${f.id}" style="--c1:${f.c1};--c2:${f.c2}">
@@ -225,7 +155,7 @@ function home(){
   document.title = C.NOME_SITE;
   app.innerHTML = `
   <section class="sec" id="cheiros">
-    <div class="sec-head"><h2>Escolha pelo cheiro</h2><p>Toque num cheiro para ver todos os produtos dele.</p></div>
+    <div class="sec-head"><h2>Escolha pelo cheiro</h2><p>Produtos originais Via Aroma com preço de revendedora. Toque num cheiro para ver tudo o que tem nele.</p></div>
     <div class="fam-row">${FAM.map(f => { const n = aromasFam(f.id).length;
       return `<a class="fam-c" href="#familia-${f.id}" style="--c1:${f.c1};--c2:${f.c2}">
         <span class="fam-dot" data-bg="${f.id}"></span>
@@ -416,7 +346,8 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#drawer
 
 let draft = {};
 try { draft = JSON.parse(localStorage.getItem("dados") || "{}") || {}; } catch(e){}
-const resumo = () => Object.entries(bag).map(([id,q]) => { const p = BY_ID[id]; return `${q}x ${nomeProd(p)} (${detalhe(p)})`; }).join("\n");
+const resumo = () => { const linhas = Object.entries(bag).map(([id,q]) => { const p = BY_ID[id], v = preco(p); return `${q}x ${nomeProd(p)} (${detalhe(p)}) ${v ? "= " + BRL(v * q) : "= a consultar"}`; });
+  const { t, sem } = totalSacola(); return linhas.join("\n") + `\nTotal: ${BRL(t)}${sem ? " + itens a consultar" : ""}`; };
 
 function renderBag(){
   const body = $("#drawerBody");
@@ -433,9 +364,11 @@ function renderBag(){
     <p class="bag-resumo">${bagCount()} ${bagCount() === 1 ? "item" : "itens"} · ${ids.length} ${ids.length === 1 ? "produto" : "produtos"}</p>
     <ul class="items">${ids.map(id => { const p = BY_ID[id], f = famOf(p) ? FAM_BY[famOf(p)] : null; return `
       <li class="item" data-id="${id}"><div class="thumb" style="--c1:${f ? f.c1 : "#EEF1E8"}">${pic(p)}</div>
-        <div><div class="t">${esc(nomeProd(p))}</div><div class="s">${esc(detalhe(p))}</div><button type="button" class="rm" data-rm="${id}" aria-label="Remover ${esc(nomeProd(p))} da sacola">Remover</button></div>
+        <div><div class="t">${esc(nomeProd(p))}</div><div class="s">${esc(detalhe(p))}</div><div class="s-preco">${preco(p) ? BRL(preco(p) * bag[id]) : "Valor sob consulta"}</div><button type="button" class="rm" data-rm="${id}" aria-label="Remover ${esc(nomeProd(p))} da sacola">Remover</button></div>
         <div class="qty"><button type="button" data-dec="${id}" aria-label="Tirar um ${esc(nomeProd(p))}">−</button><span>${bag[id]}</span><button type="button" data-inc="${id}" aria-label="Pôr mais um ${esc(nomeProd(p))}">+</button></div></li>`; }).join("")}
     </ul>
+    ${(() => { const { t, sem } = totalSacola(); return `<div class="total"><span>Total</span><strong>${BRL(t)}</strong></div>
+      ${sem ? `<p class="note">${sem === 1 ? "1 item está" : sem + " itens estão"} sem valor no site. Eu te passo o valor no WhatsApp.</p>` : ""}`; })()}
     <form class="form" id="orderForm" novalidate>
       <h3>Seus dados</h3>
       ${C.PLANILHA_URL ? "" : `<div class="warn" id="warnCfg">Os pedidos ainda não podem ser enviados porque a planilha não foi ligada. Enquanto isso, copie a lista e mande pelo WhatsApp. <button type="button" class="link" id="copiarLista">Copiar lista</button></div>`}
@@ -479,7 +412,7 @@ async function submit(e){
     local: $("#f-local").value.trim(), obs: $("#f-obs").value.trim(),
     itens: Object.entries(bag).map(([id,q]) => { const p = BY_ID[id], ar = p.aroma ? AR[p.aroma] : null;
       return {id, produto: T[p.tipo].nome + (ar ? "" : (p.nome ? " " + p.nome : "")), aroma: ar ? aromaLabel(ar) : "", linha: ar ? ar.linha : p.linha, tamanho: p.tam || "", qtd: q}; }),
-    totalItens: bagCount(), resumo: resumo()
+    totalItens: bagCount(), total: totalSacola().t, resumo: resumo()
   };
   try{
     await fetch(C.PLANILHA_URL, {method:"POST", mode:"no-cors", headers:{"Content-Type":"text/plain;charset=utf-8"}, body: JSON.stringify(payload)});
@@ -499,13 +432,13 @@ document.addEventListener("click", e => {
   if (!t) return;
   if (t.dataset.add){ const id = t.dataset.add; setQty(id, 1); updateBadge(true);
     toast(`${nomeProd(BY_ID[id])} está na sacola.`, { label:"Ver sacola", fn:openBag });
-    const q = detAberto === id ? $("#det [data-inc]") : document.querySelector(`.prod[data-id="${id}"] [data-inc]`); q && q.focus(); }
+    const q = document.querySelector(`.prod[data-id="${id}"] [data-inc]`); q && q.focus(); }
   else if (t.dataset.inc) setQty(t.dataset.inc, (bag[t.dataset.inc]||0) + 1);
   else if (t.dataset.dec){ const id = t.dataset.dec; if ((bag[id]||0) <= 1) tirar(id); else setQty(id, bag[id] - 1); }
   else if (t.dataset.rm) tirar(t.dataset.rm);
-  else if (t.hasAttribute("data-open-bag")){ fecharDet(true); openBag(); }
+  else if (t.hasAttribute("data-open-bag")) openBag();
   if ((t.dataset.inc || t.dataset.dec) && !t.isConnected){
-    const id = t.dataset.inc || t.dataset.dec, card = detAberto === id ? $("#det") : document.querySelector(`.prod[data-id="${id}"]`);
+    const id = t.dataset.inc || t.dataset.dec, card = document.querySelector(`.prod[data-id="${id}"]`);
     const alvo = card && (card.querySelector(t.dataset.inc ? "[data-inc]" : "[data-dec]") || card.querySelector("[data-add]"));
     alvo && alvo.focus();
   }
