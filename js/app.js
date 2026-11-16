@@ -88,6 +88,18 @@ function toast(msg, acao){
   agendar();
   function esconder(){ clearTimeout(toast.t); t.classList.remove("show"); }
 }
+// esvaziar a sacola: acontece na hora e dá para desfazer
+function esvaziar(){
+  const antes = { ...bag };
+  Object.keys(bag).forEach(id => { delete bag[id]; refreshProd(id); });
+  save(); updateBadge();
+  if ($("#drawer").classList.contains("open") && !sent) { renderBag(); $("#drawer h2").focus(); }
+  toast("Sua sacola foi esvaziada.", { label:"Desfazer", fn:() => {
+    Object.assign(bag, antes); save(); updateBadge(true);
+    Object.keys(antes).forEach(refreshProd);
+    if ($("#drawer").classList.contains("open") && !sent) renderBag();
+  }});
+}
 // tirar da sacola: acontece na hora e dá para desfazer
 function tirar(id){
   const antes = bag[id] || 0, p = BY_ID[id];
@@ -449,7 +461,7 @@ const resumo = () => { const linhas = Object.entries(bag).map(([id,q]) => { cons
 function renderBag(){
   const body = $("#drawerBody");
   if (sent){
-    body.innerHTML = `<div class="done"><div class="num">Pedido ${esc(sent)}</div><h3>Pedido enviado!</h3><p class="note">Recebi sua lista com ${enviado ? enviado.itens : ""} ${enviado && enviado.itens === 1 ? "item" : "itens"}. Vou chamar ${enviado ? esc(enviado.nome.split(" ")[0]) : "você"} no WhatsApp ${enviado ? esc(enviado.zap) : ""} para combinar valores e entrega.</p><div class="hero-cta"><button type="button" class="btn" id="again">Continuar olhando</button></div></div>`;
+    body.innerHTML = `<div class="done"><div class="num">Pedido ${esc(sent)}</div><h3>Pedido enviado!</h3><p class="note">Recebi sua lista com ${enviado ? enviado.itens : ""} ${enviado && enviado.itens === 1 ? "item" : "itens"}. Vou chamar ${enviado ? esc(enviado.nome.split(" ")[0]) : "você"} no WhatsApp ${enviado ? esc(enviado.zap) : ""} para combinar o pagamento e a entrega.</p><div class="hero-cta"><button type="button" class="btn" id="again">Continuar olhando</button></div></div>`;
     $("#again").onclick = closeBag; return;
   }
   const ids = Object.keys(bag);
@@ -458,7 +470,8 @@ function renderBag(){
     $("#goAr").onclick = closeBag; return;
   }
   body.innerHTML = `
-    <p class="bag-resumo">${bagCount()} ${bagCount() === 1 ? "item" : "itens"} · ${ids.length} ${ids.length === 1 ? "produto" : "produtos"}</p>
+    <div class="bag-topo"><p class="bag-resumo">${bagCount()} ${bagCount() === 1 ? "item" : "itens"} · ${ids.length} ${ids.length === 1 ? "produto" : "produtos"}</p>
+      <button type="button" class="esvaziar" id="esvaziar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>Esvaziar sacola</button></div>
     <ul class="items">${ids.map(id => { const p = BY_ID[id], f = famOf(p) ? FAM_BY[famOf(p)] : null; return `
       <li class="item" data-id="${id}"><div class="thumb" style="--c1:${f ? f.c1 : "#EEF1E8"}">${pic(p)}</div>
         <div><div class="t">${esc(nomeProd(p))}</div><div class="s">${esc(detalhe(p))}</div><div class="s-preco">${preco(p) ? BRL(preco(p) * bag[id]) : "Valor sob consulta"}</div><button type="button" class="rm" data-rm="${id}" aria-label="Remover ${esc(nomeProd(p))} da sacola">Remover</button></div>
@@ -473,11 +486,12 @@ function renderBag(){
       <div class="field"><label for="f-zap">WhatsApp</label><input id="f-zap" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="(51) 90000-0000" required value="${esc(draft.whatsapp||"")}"><span class="err" id="e-zap"></span></div>
       <div class="field"><label for="f-local">Bairro e cidade</label><input id="f-local" name="local" autocomplete="address-level2" value="${esc(draft.local||"")}"></div>
       <div class="field"><label for="f-obs">Observação</label><textarea id="f-obs" name="obs" placeholder="É para presente? Alguma preferência?">${esc(draft.obs||"")}</textarea></div>
-      <p class="note">Sem pagamento agora. Depois do pedido eu te chamo para combinar valores e entrega.</p>
+      <p class="note">Você não paga nada agora. Assim que o pedido chegar, eu te chamo no WhatsApp para combinar o pagamento e a entrega.</p>
       <button class="btn" type="submit" id="sendBtn" ${C.PLANILHA_URL ? "" : `aria-describedby="warnCfg"`}>Enviar pedido</button>
       <p class="err" id="e-envio" role="alert"></p>
     </form>`;
   hydratePhotos(body);
+  $("#esvaziar").onclick = esvaziar;
   const f = $("#orderForm");
   f.addEventListener("input", () => { draft = Object.fromEntries(new FormData(f)); try{localStorage.setItem("dados", JSON.stringify(draft));}catch(e){} });
   $("#f-nome").addEventListener("blur", vNome); $("#f-zap").addEventListener("blur", vZap);
