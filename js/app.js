@@ -69,7 +69,7 @@ const nomeProd = p => p.aroma ? `${T[p.tipo].nome} ${aromaLabel(AR[p.aroma])}` :
 const BRL = v => v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
 function precoCheio(p){ return p.kit ? p.kit.itens.reduce((s, id) => s + (preco(BY_ID[id]) || 0), 0) : preco(p); }
 function preco(p){
-  if (p.kit){ const soma = precoCheio(p); return soma ? Math.floor(soma * (1 - (p.kit.desconto || 0)) - 0.9) + 0.9 : null; }
+  if (p.kit){ const soma = precoCheio(p); return soma ? Math.floor((soma * (1 - (p.kit.desconto || 0)) - 0.4) * 2 + 1e-9) / 2 + 0.4 : null; /* kit: arredonda para baixo até ,40 ou ,90 (desconto sempre de pelo menos 5%) */ }
   const v = (window.PAINEL || {})[p.id]; if (!v) return null; const ipi = (window.IPI || {})[p.tipo] ?? 0.22; return Math.ceil(v * (1 + ipi) * (C.MARGEM || 1.15) - 0.9) + 0.9; }
 function totalSacola(){ let t = 0, sem = 0; Object.entries(bag).forEach(([id,q]) => { const v = preco(BY_ID[id]); if (v) t += v * q; else sem += q; }); return { t, sem }; }
 const detalhe = p => p.kit ? `Kit de Natal · ${p.tam}` : [p.aroma ? AR[p.aroma].linha : p.linha, p.tam].filter(Boolean).join(" · ");
