@@ -391,13 +391,14 @@ function bolinha(a, f, ativo){
 function famPage(f, aromaAtivo){
   const ps = prodsFam(f.id).sort(sortProd);
   const aromas = aromasFam(f.id).sort((a,b) => PRODUTOS.filter(p=>p.aroma===b.id).length - PRODUTOS.filter(p=>p.aroma===a.id).length || a.nome.localeCompare(b.nome));
-  const sel = aromaAtivo && aromas.some(a => a.id === aromaAtivo) ? aromaAtivo : aromas[0].id;
+  const sel = aromaAtivo && aromas.some(a => a.id === aromaAtivo) ? aromaAtivo : "";
   const i = FAM.indexOf(f), outras = [1,2,3,4].map(k => FAM[(i + k) % FAM.length]);
   document.title = `${f.nome} · ${C.NOME_SITE}`;
   app.innerHTML = banner(f.nome, f.id, f.c1, f.c2) + `
   <p class="fam-texto">${esc(f.texto)}</p>
 
   <section class="ar-row" aria-label="Aromas da família ${esc(f.nome)}">
+    ${aromas.length > 1 ? `<button type="button" class="ar-c" data-ar="" aria-pressed="${!sel}" style="--c1:${f.c1};--c2:${f.c2}"><span class="ar-nome">Todos</span></button>` : ""}
     ${aromas.map(a => bolinha(a, f, a.id === sel)).join("")}
   </section>
 
@@ -411,16 +412,32 @@ function famPage(f, aromaAtivo){
     </div></div>
   </section>`;
 
-  const mostrar = id => {
-    const a = AR[id], pa = ps.filter(p => p.aroma === id);
-    app.querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.ar === id));
-    $("#produtos").innerHTML = `<div class="ar-head"><h2>${esc(a.nome)}</h2>
-      <div class="ar-sub">${esc([a.linha, a.cidade].filter(Boolean).join(" · "))} · ${pa.length} ${pa.length > 1 ? "produtos" : "produto"}</div></div>
-      <div class="prods">${pa.map(prodCard).join("")}</div>`;
+  // "Todos" mostra a família inteira, agrupada por aroma; os tipos filtram por cima
+  const st = { ar: aromas.length > 1 ? sel : aromas[0].id, tp: "" };
+  const ordTipo = (a,b) => ORDEM_TIPO.indexOf(a) - ORDEM_TIPO.indexOf(b);
+  const conta = n => `${n} ${n === 1 ? "produto" : "produtos"}`;
+  const mostrar = () => {
+    const a = st.ar ? AR[st.ar] : null, base = a ? ps.filter(p => p.aroma === a.id) : ps;
+    const tipos = [...new Set(base.map(p => p.tipo))].sort(ordTipo);
+    if (!tipos.includes(st.tp)) st.tp = "";
+    const vis = base.filter(p => !st.tp || p.tipo === st.tp);
+    app.querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.ar === st.ar));
+    const sub = a ? [a.linha, a.cidade].filter(Boolean).join(" · ") + " · " + conta(vis.length)
+                  : `${aromas.length} aromas · ${conta(vis.length)}`;
+    const tipoBtn = (t, nome) => `<button type="button" class="tp-c" data-tp="${t}" aria-pressed="${st.tp === t}">${esc(nome)}</button>`;
+    const grade = a ? `<div class="prods">${vis.map(prodCard).join("")}</div>`
+      : aromas.map(x => { const px = vis.filter(p => p.aroma === x.id); if (!px.length) return "";
+          return `<div class="ar-grupo"><button type="button" class="ar-grupo-t" data-ir="${x.id}">${esc(aromaLabel(x))}<small>${esc([x.linha, x.cidade].filter(Boolean).join(" · "))}</small></button>
+            <div class="prods">${px.map(prodCard).join("")}</div></div>`; }).join("");
+    $("#produtos").innerHTML = `<div class="ar-head"><h2>${esc(a ? a.nome : "Todos")}</h2><div class="ar-sub">${esc(sub)}</div></div>
+      ${tipos.length > 1 ? `<div class="tp-row" role="group" aria-label="Filtrar por tipo de produto">${tipoBtn("", "Todos os tipos")}${tipos.map(t => tipoBtn(t, T[t].nome)).join("")}</div>` : ""}
+      ${grade}`;
+    $("#produtos").querySelectorAll(".tp-c").forEach(b => b.onclick = () => { st.tp = b.dataset.tp; mostrar(); });
+    $("#produtos").querySelectorAll(".ar-grupo-t").forEach(b => b.onclick = () => { st.ar = b.dataset.ir; mostrar(); $("#produtos").scrollIntoView({block:"start"}); });
     hydratePhotos($("#produtos"));
   };
-  app.querySelectorAll(".ar-c").forEach(b => b.onclick = () => { mostrar(b.dataset.ar); $("#produtos").scrollIntoView({block:"start"}); });
-  mostrar(sel);
+  app.querySelectorAll(".ar-c").forEach(b => b.onclick = () => { st.ar = b.dataset.ar; mostrar(); $("#produtos").scrollIntoView({block:"start"}); });
+  mostrar();
   // foto opcional de cada aroma: img/aromas/<id>.jpg
   // ícone de cada aroma: img/aromas/<id>.png (ou .jpg)
   app.querySelectorAll("[data-aimg]").forEach(el => {
