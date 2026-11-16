@@ -7,6 +7,13 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 /* ---------- Catálogo ---------- */
 const AR = Object.fromEntries(window.AROMAS.map(a => [a.id, a]));
 const PRODUTOS = window.PRODUTOS;
+/* Natal (js/natal.js): kits entram no catálogo como produtos */
+const hojeISO = new Date().toLocaleDateString("sv-SE");
+const NATAL = window.NATAL && hojeISO <= window.NATAL.fim ? window.NATAL : null;
+if (NATAL){
+  T["kit-natal"] = { nome: "Kit de Natal", uso: "Já vem combinado para presentear." };
+  NATAL.kits.forEach(k => { if (!PRODUTOS.some(p => p.id === k.id)) PRODUTOS.push({ id: k.id, tipo: "kit-natal", nome: k.nome, tam: `${k.itens.length} itens`, linha: k.texto, kit: k }); });
+}
 const BY_ID = Object.fromEntries(PRODUTOS.map(p => [p.id, p]));
 const FAM_BY = Object.fromEntries(FAM.map(f => [f.id, f]));
 const famOf = p => p.aroma ? AR[p.aroma].fam : null;
@@ -60,9 +67,14 @@ const bagCount = () => Object.values(bag).reduce((a,b) => a+b, 0);
 const nomeProd = p => p.aroma ? `${T[p.tipo].nome} ${aromaLabel(AR[p.aroma])}` : (p.tipo === "oleo" ? `Óleo essencial ${p.nome}` : p.tipo === "aparelho" ? `Aromatizador ${p.nome}` : p.nome || T[p.tipo].nome);
 /* Preço: valor do painel x multiplicador, arredondado para cima até ,90 */
 const BRL = v => v.toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
-function preco(p){ const v = (window.PAINEL || {})[p.id]; if (!v) return null; const ipi = (window.IPI || {})[p.tipo] ?? 0.22; return Math.ceil(v * (1 + ipi) * (C.MARGEM || 1.15) - 0.9) + 0.9; }
+function precoCheio(p){ return p.kit ? p.kit.itens.reduce((s, id) => s + (preco(BY_ID[id]) || 0), 0) : preco(p); }
+function preco(p){
+  if (p.kit){ const soma = precoCheio(p); return soma ? Math.floor(soma * (1 - (p.kit.desconto || 0)) - 0.9) + 0.9 : null; }
+  const v = (window.PAINEL || {})[p.id]; if (!v) return null; const ipi = (window.IPI || {})[p.tipo] ?? 0.22; return Math.ceil(v * (1 + ipi) * (C.MARGEM || 1.15) - 0.9) + 0.9; }
 function totalSacola(){ let t = 0, sem = 0; Object.entries(bag).forEach(([id,q]) => { const v = preco(BY_ID[id]); if (v) t += v * q; else sem += q; }); return { t, sem }; }
-const detalhe = p => [p.aroma ? AR[p.aroma].linha : p.linha, p.tam].filter(Boolean).join(" · ");
+const detalhe = p => p.kit ? `Kit de Natal · ${p.tam}` : [p.aroma ? AR[p.aroma].linha : p.linha, p.tam].filter(Boolean).join(" · ");
+const itensKit = p => p.kit.itens.map(id => { const x = BY_ID[id]; return [T[x.tipo].nome, x.tam].filter(Boolean).join(" "); }).join(" + ");
+const precoHTML = p => preco(p) ? `${p.kit ? `<s class="de" aria-label="Antes ${BRL(precoCheio(p))}">${BRL(precoCheio(p))}</s> ` : ""}${BRL(preco(p))}` : `<span class="consultar">Valor sob consulta</span>`;
 function setQty(id, q){
   if (q <= 0) delete bag[id]; else bag[id] = Math.min(q, 99);
   save(); updateBadge(); refreshProd(id);
@@ -123,14 +135,14 @@ function prodCard(p){
   const a = p.aroma ? AR[p.aroma] : null;
   const titulo = a ? T[p.tipo].nome : (p.nome || T[p.tipo].nome);
   const linha1 = a ? (p.tam || a.linha) : [T[p.tipo].nome, p.tam].filter(Boolean).join(" · ");
-  const linha2 = a ? T[p.tipo].uso : p.linha;
+  const linha2 = a ? T[p.tipo].uso : p.kit ? itensKit(p) : p.linha;
   return `<article class="prod ${bag[p.id]?"in":""}" data-id="${p.id}" data-aroma="${p.aroma||""}" data-tipo="${p.tipo}">
     <button type="button" class="pic" data-ver="${p.id}" aria-label="Ver detalhes de ${esc(nomeProd(p))}">${pic(p)}</button>
     <div class="body">
       <div class="line">${esc(linha1)}</div>
       <h3>${esc(titulo)}</h3>
       <div class="sub">${esc(linha2)}</div>
-      <div class="preco">${preco(p) ? BRL(preco(p)) : `<span class="consultar">Valor sob consulta</span>`}</div>
+      <div class="preco">${precoHTML(p)}</div>
       <div class="buy">${buyCtl(p.id)}</div>
     </div></article>`;
 }
@@ -148,15 +160,15 @@ function detalheHTML(p){
   const a = p.aroma ? AR[p.aroma] : null, f = a ? FAM_BY[a.fam] : null, t = T[p.tipo];
   const titulo = a ? a.nome : (p.nome || t.nome);
   const sobre = a ? [t.nome, a.cidade].filter(Boolean).join(" · ") : t.nome;
-  const specs = [["Produto", t.nome], ["Tamanho", p.tam], ["Linha", a ? a.linha : p.linha], ["Família", f && f.nome], ["Perfil", f && f.perfil], ["Como usar", t.uso]].filter(r => r[1]);
+  const specs = [["Produto", t.nome], ["Vem no kit", p.kit && itensKit(p)], ["Economia", p.kit && BRL(precoCheio(p) - preco(p))], ["Tamanho", p.kit ? null : p.tam], ["Linha", a ? a.linha : p.linha], ["Família", f && f.nome], ["Perfil", f && f.perfil], ["Como usar", t.uso]].filter(r => r[1]);
   const irmaos = a ? PRODUTOS.filter(x => x.aroma === a.id).sort(sortProd) : [];
   return `<button type="button" class="det-x" id="detX" aria-label="Fechar detalhes">×</button>
     <div class="det-foto">${pic(p)}</div>
     <div class="det-info">
       <div class="det-sobre">${a ? `<span class="det-ic" data-dic="${a.id}"></span>` : ""}<span>${esc(sobre)}</span></div>
       <h2 id="detTitulo">${esc(titulo)}</h2>
-      <div class="det-preco">${preco(p) ? BRL(preco(p)) : `<span class="consultar">Valor sob consulta</span>`}</div>
-      ${f && f.texto ? `<p class="det-texto">${esc(f.texto)}</p>` : ""}
+      <div class="det-preco">${precoHTML(p)}</div>
+      ${f && f.texto ? `<p class="det-texto">${esc(f.texto)}</p>` : p.kit ? `<p class="det-texto">${esc(p.kit.texto)}</p>` : ""}
       <dl class="det-specs">${specs.map(([k,v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("")}</dl>
       <div class="det-buy buy">${buyCtl(p.id)}</div>
       ${irmaos.length > 1 ? `<div class="det-mais"><div class="det-rot">Também neste aroma</div><div class="det-chips">${irmaos.map(x =>
@@ -241,7 +253,14 @@ function heroPanel({c1, c2, titulo, badge, texto, capaId, ps, sideL, sideR, cta}
 
 function home(){
   document.title = C.NOME_SITE;
-  app.innerHTML = `
+  const dia = NATAL ? NATAL.ate.split("-").reverse().slice(0,2).join("/") : "";
+  app.innerHTML = `${NATAL ? `
+  <a class="natal-faixa" href="#natal" style="--c1:${NATAL.c1};--c2:${NATAL.c2}">
+    <span class="nf-img" data-bg="natal"></span>
+    <span class="nf-txt"><span class="nf-tag">Natal</span><span class="nf-tit">Presentes de Natal</span>
+      <span class="nf-sub">Kit com desconto e os cheiros da época${hojeISO <= NATAL.ate ? `. Pedidos até ${dia}` : ""}.</span>
+      <span class="nf-cta">Ver presentes</span></span>
+  </a>` : ""}
   <section class="sec" id="cheiros">
     <div class="sec-head"><h2>Escolha pelo cheiro</h2><p>Produtos originais Via Aroma com preço de revendedora. Toque num cheiro para ver tudo o que tem nele.</p></div>
     <div class="fam-row">${FAM.map(f => { const n = aromasFam(f.id).length;
@@ -431,12 +450,40 @@ function especialPage(id){
   carregarBanner();
 }
 
+function natalPage(){
+  const n = NATAL, kits = PRODUTOS.filter(p => p.kit);
+  const aromas = n.aromas.map(id => AR[id]).filter(a => a && PRODUTOS.some(p => p.aroma === a.id));
+  document.title = `Natal · ${C.NOME_SITE}`;
+  app.innerHTML = banner("Natal", "natal", n.c1, n.c2) + `
+  <p class="fam-texto">${esc(n.texto)}</p>
+  ${kits.length ? `<section class="ar-prods natal-kits" style="--c1:${n.c1};--c2:${n.c2}">
+    <div class="ar-head"><h2>${kits.length > 1 ? "Kits de presente" : "Kit de presente"}</h2><div class="ar-sub">Mais barato que comprar separado</div></div>
+    <div class="prods">${kits.map(prodCard).join("")}</div></section>` : ""}
+  <div class="ar-head natal-epoca"><h2>Cheiros da época</h2></div>
+  <section class="ar-row" aria-label="Cheiros da época" style="--c1:${n.c1};--c2:${n.c2}">
+    ${aromas.map((a, i) => bolinha(a, { c1: n.c1, c2: n.c2 }, i === 0)).join("")}
+  </section>
+  <section class="ar-prods" id="produtos" style="--c1:${n.c1};--c2:${n.c2}"></section>`;
+  const mostrar = id => {
+    const a = AR[id], pa = PRODUTOS.filter(p => p.aroma === id).sort(sortProd);
+    app.querySelectorAll(".ar-c").forEach(b => b.setAttribute("aria-pressed", b.dataset.ar === id));
+    $("#produtos").innerHTML = `<div class="ar-head"><h2>${esc(a.nome)}</h2>
+      <div class="ar-sub">${esc([a.linha, a.cidade].filter(Boolean).join(" · "))} · ${pa.length} ${pa.length > 1 ? "produtos" : "produto"}</div></div>
+      <div class="prods">${pa.map(prodCard).join("")}</div>`;
+    hydratePhotos($("#produtos"));
+  };
+  app.querySelectorAll(".ar-c").forEach(b => b.onclick = () => { mostrar(b.dataset.ar); $("#produtos").scrollIntoView({block:"start"}); });
+  if (aromas.length) mostrar(aromas[0].id);
+  carregarBanner();
+}
+
 function route(){
   const h = decodeURIComponent(location.hash.slice(1));
   let m;
   if ((m = h.match(/^familia-(.+)$/)) && FAM_BY[m[1]]) { famPage(FAM_BY[m[1]]); window.scrollTo(0,0); }
   else if ((m = h.match(/^aroma-(.+)$/)) && AR[m[1]]) { famPage(FAM_BY[AR[m[1]].fam], m[1]); }
   else if (ESP[h]) { especialPage(h); window.scrollTo(0,0); }
+  else if (h === "natal" && NATAL) { natalPage(); window.scrollTo(0,0); }
   else if (h === "cheiros" || h === "busca" || h === "produtos") {
     if (!document.getElementById(h)) home();
     hydratePhotos(); const el = document.getElementById(h); el && el.scrollIntoView(); return;
@@ -445,6 +492,10 @@ function route(){
   hydratePhotos();
 }
 window.addEventListener("hashchange", route);
+if (NATAL && hojeISO <= NATAL.ate){
+  const dia = NATAL.ate.split("-").reverse().slice(0,2).join("/");
+  document.querySelector(".frame").insertAdjacentHTML("afterbegin", `<a class="aviso-natal" href="#natal">Pedidos para receber antes do Natal até <strong>${dia}</strong>. <span>Ver presentes</span></a>`);
+}
 
 /* ---------- Gaveta / checkout ---------- */
 let sent = null, enviado = null;
@@ -522,7 +573,7 @@ async function submit(e){
     nome: $("#f-nome").value.trim(), whatsapp: $("#f-zap").value.trim(),
     local: $("#f-local").value.trim(), obs: $("#f-obs").value.trim(),
     itens: Object.entries(bag).map(([id,q]) => { const p = BY_ID[id], ar = p.aroma ? AR[p.aroma] : null;
-      return {id, produto: T[p.tipo].nome + (ar ? "" : (p.nome ? " " + p.nome : "")), aroma: ar ? aromaLabel(ar) : "", linha: ar ? ar.linha : p.linha, tamanho: p.tam || "", qtd: q}; }),
+      return p.kit ? {id, produto: `${p.nome} (${itensKit(p)})`, aroma: "", linha: "Natal", tamanho: p.tam, qtd: q} : {id, produto: T[p.tipo].nome + (ar ? "" : (p.nome ? " " + p.nome : "")), aroma: ar ? aromaLabel(ar) : "", linha: ar ? ar.linha : p.linha, tamanho: p.tam || "", qtd: q}; }),
     totalItens: bagCount(), total: totalSacola().t, resumo: resumo()
   };
   try{
