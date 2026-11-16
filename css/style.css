@@ -190,9 +190,12 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 @media (max-width:760px){
-  .top{grid-template-columns:auto 1fr auto}
-  .top-l{gap:10px}
-  .top-l a:not(:first-child){display:none}
+  .top{grid-template-columns:1fr auto;grid-template-areas:"brand bag" "nav nav";row-gap:12px;padding-bottom:12px}
+  .brand{grid-area:brand;align-items:flex-start}
+  .top-r{grid-area:bag}
+  .top-l{grid-area:nav;gap:clamp(12px,3.5vw,20px);flex-wrap:nowrap;justify-content:safe center;overflow-x:auto;padding-top:10px;border-top:1px solid var(--line);scrollbar-width:none}
+  .top-l::-webkit-scrollbar{display:none}
+  .top-l a{white-space:nowrap;font-size:10px;letter-spacing:clamp(.06em,.4vw,.16em)}
   .panel .side{display:none}
   .land-grid{grid-template-columns:1fr}
   .fig.l,.fig.r{text-align:center}
@@ -416,3 +419,6 @@ html.travado{overflow:hidden}
 .natal-kits .prods{grid-template-columns:repeat(auto-fit,minmax(220px,300px));justify-content:center}
 .natal-epoca{margin-top:clamp(40px,6vw,70px);margin-bottom:0}
 @media (max-width:760px){.natal-faixa{grid-template-columns:1fr}.nf-img{min-height:200px}}
+
+.top-l a.nav-natal{color:#8E2320}
+@media (max-width:420px){.top-l{gap:11px}.top-l a{font-size:9.5px;letter-spacing:.05em}}
