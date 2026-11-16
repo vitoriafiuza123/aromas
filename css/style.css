@@ -422,3 +422,5 @@ html.travado{overflow:hidden}
 
 .top-l a.nav-natal{color:#8E2320}
 @media (max-width:420px){.top-l{gap:11px}.top-l a{font-size:9.5px;letter-spacing:.05em}}
+.det-foto .ph{position:relative}
+.det-foto .ph img.art{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
