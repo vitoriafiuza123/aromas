@@ -73,7 +73,15 @@ function preco(p){
   const v = (window.PAINEL || {})[p.id]; if (!v) return null; const ipi = (window.IPI || {})[p.tipo] ?? 0.22; return Math.ceil(v * (1 + ipi) * (C.MARGEM || 1.15) - 0.9) + 0.9; }
 function totalSacola(){ let t = 0, sem = 0; Object.entries(bag).forEach(([id,q]) => { const v = preco(BY_ID[id]); if (v) t += v * q; else sem += q; }); return { t, sem }; }
 const detalhe = p => p.kit ? `Kit de Natal · ${p.tam}` : [p.aroma ? AR[p.aroma].linha : p.linha, p.tam].filter(Boolean).join(" · ");
-const itensKit = p => p.kit.itens.map(id => { const x = BY_ID[id]; return [T[x.tipo].nome, x.tam].filter(Boolean).join(" "); }).join(" + ");
+const itensKit = p => {
+  const xs = p.kit.itens.map(id => BY_ID[id]), aromas = new Set(xs.map(x => x.aroma).filter(Boolean)), g = [];
+  xs.forEach(x => { const k = x.tipo + "|" + (x.tam || ""); let e = g.find(y => y.k === k); if (!e) g.push(e = { k, x, ar: [] }); if (x.aroma) e.ar.push(AR[x.aroma].nome); });
+  return g.map(({ x, ar }) => {
+    if (!x.aroma) return nomeProd(x);
+    const base = [ar.length > 1 ? `${ar.length} ${T[x.tipo].nome.toLowerCase()}s` : T[x.tipo].nome, x.tam].filter(Boolean).join(" ");
+    return aromas.size > 1 ? `${base} (${ar.join(", ")})` : base;
+  }).join(" + ");
+};
 const precoHTML = p => preco(p) ? `${p.kit ? `<s class="de" aria-label="Antes ${BRL(precoCheio(p))}">${BRL(precoCheio(p))}</s> ` : ""}${BRL(preco(p))}` : `<span class="consultar">Valor sob consulta</span>`;
 function setQty(id, q){
   if (q <= 0) delete bag[id]; else bag[id] = Math.min(q, 99);
@@ -160,7 +168,7 @@ function detalheHTML(p){
   const a = p.aroma ? AR[p.aroma] : null, f = a ? FAM_BY[a.fam] : null, t = T[p.tipo];
   const titulo = a ? a.nome : (p.nome || t.nome);
   const sobre = a ? [t.nome, a.cidade].filter(Boolean).join(" · ") : t.nome;
-  const specs = [["Produto", t.nome], ["Vem no kit", p.kit && itensKit(p)], ["Economia", p.kit && BRL(precoCheio(p) - preco(p))], ["Tamanho", p.kit ? null : p.tam], ["Linha", a ? a.linha : p.linha], ["Família", f && f.nome], ["Perfil", f && f.perfil], ["Como usar", t.uso]].filter(r => r[1]);
+  const specs = p.kit ? [["Vem no kit", itensKit(p)], ["Itens", p.tam]] : [["Produto", t.nome], ["Tamanho", p.kit ? null : p.tam], ["Linha", a ? a.linha : p.linha], ["Família", f && f.nome], ["Perfil", f && f.perfil], ["Como usar", t.uso]].filter(r => r[1]);
   const irmaos = a ? PRODUTOS.filter(x => x.aroma === a.id).sort(sortProd) : [];
   return `<button type="button" class="det-x" id="detX" aria-label="Fechar detalhes">×</button>
     <div class="det-foto">${pic(p)}</div>
