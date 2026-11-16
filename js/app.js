@@ -78,8 +78,9 @@ const itensKit = p => {
   xs.forEach(x => { const k = x.tipo + "|" + (x.tam || ""); let e = g.find(y => y.k === k); if (!e) g.push(e = { k, x, ar: [] }); if (x.aroma) e.ar.push(AR[x.aroma].nome); });
   return g.map(({ x, ar }) => {
     if (!x.aroma) return nomeProd(x);
-    const base = [ar.length > 1 ? `${ar.length} ${T[x.tipo].nome.toLowerCase()}s` : T[x.tipo].nome, x.tam].filter(Boolean).join(" ");
-    return aromas.size > 1 ? `${base} (${ar.join(", ")})` : base;
+    const plural = n => { const [w, ...r] = n.toLowerCase().split(" "); return [/[rz]$/.test(w) ? w + "es" : w + "s", ...r].join(" "); };
+    const base = [ar.length > 1 ? `${ar.length} ${plural(T[x.tipo].nome)}` : T[x.tipo].nome, x.tam].filter(Boolean).join(" ");
+    return aromas.size > 1 ? `${base} (${[...new Set(ar)].join(", ")})` : base;
   }).join(" + ");
 };
 const precoHTML = p => preco(p) ? `${p.kit ? `<s class="de" aria-label="Antes ${BRL(precoCheio(p))}">${BRL(precoCheio(p))}</s> ` : ""}${BRL(preco(p))}` : `<span class="consultar">Valor sob consulta</span>`;
