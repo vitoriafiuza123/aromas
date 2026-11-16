@@ -2,7 +2,7 @@
    Tudo o que aparece no Natal fica aqui. Depois de "fim" a página e os avisos somem sozinhos.
    - ate: último dia para pedir e receber antes do Natal (aviso no topo some depois desse dia)
    - aromas: os "cheiros da época" (ids da lista AROMAS em js/data.js). Kits com esses cheiros aparecem primeiro em cada faixa
-   - kits: cada kit soma o preço dos itens e tira o desconto (0.05 = 5%), arredondado para ,90
+   - kits: cada kit é de um cheiro só (só os kits de essências misturam cheiros). Soma o preço dos itens e tira o desconto (0.05 = 5%), arredondado para ,90
      Foto do kit: img/<id-do-kit>.jpg */
 window.NATAL = {
   ate: "2026-12-12",
@@ -93,9 +93,6 @@ window.NATAL = {
     { id: "kit-vanilla-spice-completo", nome: "Vanilla Spice Completo", desconto: 0.05,
       texto: "Difusor, água perfumada, home spray e sachê de Vanilla Spice.",
       itens: ["dif-de-varetas-200ml-via-aroma-vanilla-spice", "agua-perf-via-aroma-500ml-vanilla-spice", "home-spray-200ml-via-aroma-vanilla-spice", "sache-perfumado-10g-vanilla-spice"] },
-    { id: "kit-grande-natal", nome: "Grande Natal", desconto: 0.05,
-      texto: "Para presentear a casa toda: difusores de Maçã com Canela e Black Vanilla, home spray Vanilla Spice e sachê.",
-      itens: ["dif-de-varetas-200ml-classica-maca-com-canela", "dif-de-varetas-200ml-classica-black-vanilla", "home-spray-200ml-via-aroma-vanilla-spice", "sache-via-aroma-10g-classica-maca-c-canela"] },
     { id: "kit-noite-feliz", nome: "Noite Feliz", desconto: 0.05,
       texto: "Black Vanilla com aromatizador Stone Black: difusor, home spray e essência para a noite de Natal.",
       itens: ["dif-de-varetas-200ml-classica-black-vanilla", "home-spray-200ml-via-aroma-classica-black-vanilla", "aromat-via-aroma-stone-black", "essencia-via-aroma-10ml-classica-black-vanilla"] },
@@ -105,18 +102,12 @@ window.NATAL = {
     { id: "kit-ceia-completa", nome: "Ceia Completa", desconto: 0.05,
       texto: "Ameixa e Vanilla da Linha Mundo: difusor, água perfumada, home spray, sachê e essência.",
       itens: ["dif-de-varetas-200ml-mundo-punta-cana-ameixa-e-vanilla", "agua-perf-via-aroma-365ml-mundo-punta-cana-ameixa-e-vanilla", "home-spray-150ml-via-aroma-mundo-punta-cana-ameixa-e-vanilla", "sache-via-aroma-20g-mundo-punta-cana-ameixa-e-vanilla", "essencia-via-aroma-10ml-mundo-punta-cana-ameixa-e-vanilla"] },
-    { id: "kit-doces-de-natal", nome: "Doces de Natal", desconto: 0.05,
-      texto: "Dois difusores Vanilla Lovers, Vanilla Spice e Vanilla e Nuts, com sachês combinando.",
-      itens: ["dif-de-varetas-200ml-via-aroma-vanilla-spice", "dif-de-varetas-200ml-via-aroma-vanilla-e-nuts", "sache-perfumado-10g-vanilla-spice", "sache-perfumado-10g-vanilla-e-nuts"] },
     { id: "kit-natal-no-aromatizador", nome: "Natal no Aromatizador", desconto: 0.05,
       texto: "Aromatizador Stone Black e sete essências da época para trocar todo dia.",
       itens: ["aromat-via-aroma-stone-black", "essencia-via-aroma-10ml-classica-maca-c-canela", "essencia-via-aroma-10ml-classica-canela-da-india", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-spice", "essencia-via-aroma-10ml-classica-black-vanilla", "essencia-via-aroma-10ml-mundo-punta-cana-ameixa-e-vanilla", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-e-nuts", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-e-honey"] },
-    { id: "kit-caszulo-de-natal", nome: "Caszulo de Natal", desconto: 0.05,
-      texto: "Canela e Maçã e Ameixa Negra da linha Caszulo: difusor, home spray e água perfumada de cada.",
-      itens: ["dif-de-varetas-caszulo-250ml-canela-e-maca", "home-spray-caszulo-200ml-canela-e-maca", "agua-perf-caszulo-500ml-canela-e-maca", "dif-de-varetas-caszulo-250ml-ameixa-negra", "home-spray-caszulo-200ml-ameixa-negra", "agua-perf-caszulo-500ml-ameixa-negra"] },
-    { id: "kit-natal-em-familia", nome: "Natal em Família", desconto: 0.05,
-      texto: "Para perfumar a casa toda: difusores de Maçã com Canela e Vanilla Spice, água perfumada, home spray Black Vanilla e sachê.",
-      itens: ["dif-de-varetas-200ml-classica-maca-com-canela", "dif-de-varetas-200ml-via-aroma-vanilla-spice", "agua-perf-via-aroma-500ml-vanilla-spice", "home-spray-200ml-via-aroma-classica-black-vanilla", "sache-via-aroma-25g-classica-maca-c-canela"] },
+    { id: "kit-natal-em-familia-maca", nome: "Natal em Família", desconto: 0.05,
+      texto: "Maçã com Canela para a casa toda: dois difusores, dois home sprays, sachê e essência.",
+      itens: ["dif-de-varetas-200ml-classica-maca-com-canela", "dif-de-varetas-200ml-classica-maca-com-canela", "home-spray-200ml-via-aroma-classica-maca-c-canela", "home-spray-200ml-via-aroma-classica-maca-c-canela", "sache-via-aroma-25g-classica-maca-c-canela", "essencia-via-aroma-10ml-classica-maca-c-canela"] },
     { id: "kit-mimo-vanilla-e-nuts", nome: "Mimo Vanilla e Nuts", desconto: 0.05,
       texto: "Baunilha com castanhas num mimo pequeno: sachê e essência.",
       itens: ["sache-perfumado-10g-vanilla-e-nuts", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-e-nuts"] },
@@ -144,9 +135,9 @@ window.NATAL = {
     { id: "kit-amendoas-e-cream-completo", nome: "Amêndoas e Cream Completo", desconto: 0.05,
       texto: "A Linha Mundo Buenos Aires inteira: difusor, água perfumada, home spray, sachê e essência.",
       itens: ["dif-de-varetas-200ml-mundo-buenos-aires-amendoas-e-cream", "agua-perf-via-aroma-365ml-mundo-buenos-aires-amendoas-e-cream", "home-spray-150ml-via-aroma-mundo-buenos-aires-amendoas-e-cream", "sache-via-aroma-20g-mundo-buenos-aires-amendoas-e-cream", "essencia-via-aroma-10ml-mundo-buenos-aires-amendoas-e-cream"] },
-    { id: "kit-baunilha-premium", nome: "Baunilha Premium", desconto: 0.05,
-      texto: "Uma baunilha para cada momento: difusor Black Vanilla, água perfumada Vanilla e Honey, home spray Vanilla Spice, hidratante Vanilla, sachê e essência Vanilla e Nuts.",
-      itens: ["dif-de-varetas-200ml-classica-black-vanilla", "agua-perf-via-aroma-500ml-vanilla-e-honey", "home-spray-200ml-via-aroma-vanilla-spice", "hidratante-classica-sweet-200-ml-vanilla", "sache-via-aroma-25g-classica-black-vanilla", "essencia-via-aroma-10ml-vanilla-lovers-vanilla-e-nuts"] },
+    { id: "kit-baunilha-premium-vanilla", nome: "Baunilha Premium", desconto: 0.05,
+      texto: "Tudo em Vanilla, da casa ao corpo: difusor, água perfumada, home spray, hidratante, sachê e essência.",
+      itens: ["dif-de-varetas-200ml-classica-vanilla", "agua-perf-via-aroma-500ml-classica-vanilla", "home-spray-200ml-via-aroma-classica-vanilla", "hidratante-classica-sweet-200-ml-vanilla", "sache-via-aroma-25g-classica-vanilla", "essencia-via-aroma-10ml-classica-vanilla"] },
     { id: "kit-casa-de-natal-black-vanilla", nome: "Casa de Natal Black Vanilla", desconto: 0.05,
       texto: "Black Vanilla em todos os cantos: difusor na sala, spray para receber visita, sachê no armário e essência para o aromatizador.",
       itens: ["dif-de-varetas-200ml-classica-black-vanilla", "home-spray-200ml-via-aroma-classica-black-vanilla", "sache-via-aroma-10g-classica-black-vanilla", "essencia-via-aroma-10ml-classica-black-vanilla"] },
